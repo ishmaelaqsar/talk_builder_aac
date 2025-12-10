@@ -1,0 +1,82 @@
+* Talk Builder AAC - Sentence Building for Early Intervention
+
+Talk Builder AAC is a Flutter application designed for children (ages 2-5) who are ready to transition from single words to building sentences.
+
+Unlike general AAC apps that can be overwhelming, this app bridges the gap between simple "choice boards" and complex communication systems. It introduces the concept of a **Sentence Strip** while maintaining the **safety** and **simplicity** of the original /Toddler Talk/ philosophy[cite: 2].
+
+** 🌟 Features
+
+*** 🗣️ Builder Mode (The Default)
+- **Visual Sentence Strip:** Tapping icons adds them to a top bar, allowing the child to construct thoughts (e.g., "I" + "Want" + "Apple") before speaking.
+- **"Speak" Button:** A large, distinct button reads the entire sentence at a natural pace.
+- **Correction Tools:** Includes a "Backspace" and "Clear" button to help children learn through trial and error without frustration.
+- **Sage Green Theme:** A calming, focus-oriented color palette designed to distinguish this "big kid" app from the toddler version[cite: 7].
+
+*** 👩‍👦 Mom Mode (Admin)
+- **Safety Lock:** Access editing tools by **Long Pressing** the lock icon (top right)[cite: 8].
+- **Custom Photos:** Use the camera to add your child's specific toys, foods, or people[cite: 9].
+- **Visibility Toggles:** "Hide" cards that are no longer relevant without deleting them permanently.
+- **Backward Compatibility:** Seamlessly import backups from *Toddler Talk* so you don't have to retake all your photos.
+
+** 🛠 Tech Stack
+
+- **Framework:** Flutter (Dart)
+- **Speech:** ~flutter_tts~
+- **Camera:** ~image_picker~
+- **Storage:**
+  - ~shared_preferences~ (Card Data)
+  - ~path_provider~ (Image Files)
+- **Data Management:**
+  - ~archive~ (Zip compression/decompression) [cite: 12]
+  - ~share_plus~ (Exporting backups) [cite: 12]
+  - ~file_picker~ (Importing backups) [cite: 12]
+
+** 🚀 Getting Started
+
+*** Prerequisites
+- Flutter SDK (3.0+)
+- Android Device (Tablet recommended) or Emulator
+
+*** Installation
+
+1. Install dependencies:
+   #+BEGIN_SRC bash
+   flutter pub get
+   #+END_SRC
+
+2. Run on device:
+   #+BEGIN_SRC bash
+   flutter run
+   #+END_SRC
+
+** 📖 Parent Guide
+
+*** How to Edit Cards
+1. Open the app.
+2. Find the **Lock Icon** in the top right corner.
+3. **Press and Hold** (Long Press) for 1 second until you see "Admin Mode"[cite: 14].
+4. You will now see:
+   - A "+" button to add new photos.
+   - "Delete" and "Hide" icons on custom cards.
+   - A "Settings" gear for Backup/Restore[cite: 16].
+
+*** How to Import from "Toddler Talk"
+1. In your old *Toddler Talk* app, go to Settings -> **Backup Data** and save the ~.zip~ file.
+2. Open *Talk Builder*.
+3. Enter **Admin Mode** (Long Press Lock).
+4. Tap the **Settings Gear** and select **Import from Toddler Talk**.
+5. Select the ~.zip~ file you created. Your photos will appear automatically!
+
+*** ⚠️ Critical: Setting up "Kiosk Mode"
+To prevent your child from closing the app, you must enable **App Pinning** on your Android device:
+1. Go to *Settings > Security > Advanced > App Pinning*[cite: 18].
+2. Turn it *ON*[cite: 19].
+3. Open Talk Builder.
+4. Swipe up to see recent apps, tap the app icon, and select *Pin*[cite: 19].
+
+** 🧪 Testing
+
+The project includes a test suite that verifies the sentence strip logic and safety mechanisms.
+#+BEGIN_SRC bash
+flutter test
+#+END_SRC
