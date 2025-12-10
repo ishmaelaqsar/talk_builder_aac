@@ -1,0 +1,85 @@
+name: Talk Builder CI/CD
+
+on:
+  # Run tests on every push to main
+  push:
+    branches: [ "main" ]
+
+  # Manual button click for Release
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+# Permission needed to upload the APK to the Releases page
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Code Formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze Code
+        run: flutter analyze
+
+      - name: Run Tests
+        run: flutter test
+
+  build-release:
+    needs: validate
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # KEY STEP: Sign with Debug Key for Sideloading
+      - name: Configure Signing for Sideload
+        run: |
+          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.debug/g' android/app/build.gradle || true
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/TalkBuilder-${{ inputs.version }}.apk
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          artifacts: "build/app/outputs/flutter-apk/TalkBuilder-${{ inputs.version }}.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
