@@ -2,21 +2,42 @@
 
 Talk Builder AAC is a Flutter application designed for children (ages 2-5) who are ready to transition from single words to building sentences.
 
-Unlike general AAC apps that can be overwhelming, this app bridges the gap between simple "choice boards" and complex communication systems. It introduces the concept of a **Sentence Strip** while maintaining the **safety** and **simplicity** of the original /Toddler Talk/ philosophy[cite: 2].
+Unlike general AAC apps that can be overwhelming, this app bridges the gap between simple "choice boards" and complex communication systems. It introduces the concept of a **Sentence Strip** while maintaining the **safety** and **simplicity** of the original /Toddler Talk/ philosophy.
 
 ** 🌟 Features
 
 *** 🗣️ Builder Mode (The Default)
-- **Visual Sentence Strip:** Tapping icons adds them to a top bar, allowing the child to construct thoughts (e.g., "I" + "Want" + "Apple") before speaking.
-- **"Speak" Button:** A large, distinct button reads the entire sentence at a natural pace.
-- **Correction Tools:** Includes a "Backspace" and "Clear" button to help children learn through trial and error without frustration.
-- **Sage Green Theme:** A calming, focus-oriented color palette designed to distinguish this "big kid" app from the toddler version[cite: 7].
+- **Visual Sentence Strip:** Tapping icons adds them to a top bar, allowing the child to construct thoughts (for example, "I" + "Want" + "Apple") before speaking.
+- **"Speak" Button:** A large, distinct button reads the whole sentence at a natural pace, and highlights each word as it is spoken. While a sentence plays, the same button stops it.
+- **Correction Tools:** A "Backspace" and a "Clear" button. "Clear" offers "Undo". You can also tap a word in the strip to hear it again, or hold it to take it out.
+- **Pinned Core Words:** The eight core words stay on screen above the photo grid, so they never scroll out of reach.
+- **Sage Green Theme:** A calming, focus-oriented colour palette that sets this "big kid" app apart from the toddler version.
 
 *** 👩‍👦 Mom Mode (Admin)
-- **Safety Lock:** Access editing tools by **Long Pressing** the lock icon (top right)[cite: 8].
-- **Custom Photos:** Use the camera to add your child's specific toys, foods, or people[cite: 9].
-- **Visibility Toggles:** "Hide" cards that are no longer relevant without deleting them permanently.
+- **Safety Lock:** Access editing tools by **Long Pressing** the lock icon (top right).
+- **Custom Photos:** Take a photo, or choose one you already have, to add your child's own toys, food, or people.
+- **Visibility Toggles:** "Hide" cards that are no longer relevant, without deleting them.
+- **Rename and Reorder:** Hold a card to rename it. Use the arrows to move it.
+- **Guarded Deletes:** A delete asks first, and says that hiding is the reversible option.
+- **Auto-Relock:** Admin mode locks itself again after two minutes without a tap, so live delete buttons never sit in a child's hands.
 - **Backward Compatibility:** Seamlessly import backups from *Toddler Talk* so you don't have to retake all your photos.
+
+** 🧭 Project Layout
+
+#+BEGIN_SRC text
+lib/
+  main.dart                    App entry, theme wiring, immersive mode
+  theme.dart                   Every colour token and the ThemeData
+  models/talk_card.dart        The card model, and its JSON compatibility
+  models/core_words.dart       The eight built-in words
+  data/card_repository.dart    Storage, photo files, backup and restore
+  services/speech_service.dart Text-to-speech, and the spoken-word highlight
+  screens/builder_screen.dart  The screen and its actions
+  widgets/                     Sentence strip, vocabulary grid, tiles, dialogs
+#+END_SRC
+
+All colours live in ~lib/theme.dart~. Read them through ~AppTokens~ or
+~Theme.of(context)~, and do not add a colour literal elsewhere.
 
 ** 🛠 Tech Stack
 
@@ -27,14 +48,14 @@ Unlike general AAC apps that can be overwhelming, this app bridges the gap betwe
   - ~shared_preferences~ (Card Data)
   - ~path_provider~ (Image Files)
 - **Data Management:**
-  - ~archive~ (Zip compression/decompression) [cite: 12]
-  - ~share_plus~ (Exporting backups) [cite: 12]
-  - ~file_picker~ (Importing backups) [cite: 12]
+  - ~archive~ (Zip compression/decompression) 
+  - ~share_plus~ (Exporting backups) 
+  - ~file_picker~ (Importing backups) 
 
 ** 🚀 Getting Started
 
 *** Prerequisites
-- Flutter SDK (3.0+)
+- Flutter SDK (3.0+), or Docker (see Testing)
 - Android Device (Tablet recommended) or Emulator
 
 *** Installation
@@ -54,11 +75,11 @@ Unlike general AAC apps that can be overwhelming, this app bridges the gap betwe
 *** How to Edit Cards
 1. Open the app.
 2. Find the **Lock Icon** in the top right corner.
-3. **Press and Hold** (Long Press) for 1 second until you see "Admin Mode"[cite: 14].
+3. **Press and Hold** (Long Press) the lock until you see "Admin mode".
 4. You will now see:
    - A "+" button to add new photos.
    - "Delete" and "Hide" icons on custom cards.
-   - A "Settings" gear for Backup/Restore[cite: 16].
+   - A "Settings" gear for Backup/Restore.
 
 *** How to Import from "Toddler Talk"
 1. In your old *Toddler Talk* app, go to Settings -> **Backup Data** and save the ~.zip~ file.
@@ -69,14 +90,39 @@ Unlike general AAC apps that can be overwhelming, this app bridges the gap betwe
 
 *** ⚠️ Critical: Setting up "Kiosk Mode"
 To prevent your child from closing the app, you must enable **App Pinning** on your Android device:
-1. Go to *Settings > Security > Advanced > App Pinning*[cite: 18].
-2. Turn it *ON*[cite: 19].
+1. Go to *Settings > Security > Advanced > App Pinning*.
+2. Turn it *ON*.
 3. Open Talk Builder.
-4. Swipe up to see recent apps, tap the app icon, and select *Pin*[cite: 19].
+4. Swipe up to see recent apps, tap the app icon, and select *Pin*.
 
 ** 🧪 Testing
 
-The project includes a test suite that verifies the sentence strip logic and safety mechanisms.
+The test suite covers the sentence strip, the safety locks on destructive
+actions, the accessibility labels, and layout at four viewports and three text
+scales.
+
+With a local Flutter SDK:
 #+BEGIN_SRC bash
 flutter test
 #+END_SRC
+
+Without one, ~tool/verify.sh~ runs the same checks that CI runs, inside a
+container:
+#+BEGIN_SRC bash
+tool/verify.sh          # dart format check, flutter analyze, flutter test
+tool/verify.sh format   # rewrite files with dart format
+tool/verify.sh shell    # a shell inside the container
+#+END_SRC
+
+CI runs ~dart format --set-exit-if-changed~, so run the format step before you
+commit.
+
+** ♿ Accessibility Notes
+
+- Every card and every icon-only control carries a screen-reader label.
+- Touch targets meet the 48dp minimum, including the admin delete and hide
+  buttons.
+- The layout holds at a system text scale of 2.0. Tile text scales with a
+  ~FittedBox~ instead of overflowing.
+- Card deletes ask first. ~Clear~ offers ~Undo~.
+- Admin mode locks itself again after two minutes without a tap.

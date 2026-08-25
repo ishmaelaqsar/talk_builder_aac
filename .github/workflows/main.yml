@@ -1,9 +1,9 @@
 name: Talk Builder CI/CD
 
 on:
-  # Run tests on every push to main
+  # Run tests on every push to master
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
   # Manual button click for Release
   workflow_dispatch:
@@ -62,11 +62,6 @@ jobs:
 
       - name: Install Dependencies
         run: flutter pub get
-
-      # KEY STEP: Sign with Debug Key for Sideloading
-      - name: Configure Signing for Sideload
-        run: |
-          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.debug/g' android/app/build.gradle || true
 
       - name: Build APK
         run: flutter build apk --release
