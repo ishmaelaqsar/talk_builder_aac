@@ -8,32 +8,49 @@ Unlike general AAC apps that can be overwhelming, this app bridges the gap betwe
 
 *** 🗣️ Builder Mode (The Default)
 - **Visual Sentence Strip:** Tapping icons adds them to a top bar, allowing the child to construct thoughts (for example, "I" + "Want" + "Apple") before speaking.
-- **"Speak" Button:** A large, distinct button reads the whole sentence at a natural pace, and highlights each word as it is spoken. While a sentence plays, the same button stops it.
+- **"Speak" Button:** A large, distinct button reads the whole sentence at a natural pace, and highlights each word as it is spoken. The strip scrolls to keep that word in view. While a sentence plays, the same button stops it.
+- **New Sentence After Speak:** When a sentence plays to its end, the next card starts a new sentence. The child does not have to clear the old one first.
 - **Correction Tools:** A "Backspace" and a "Clear" button. "Clear" offers "Undo". You can also tap a word in the strip to hear it again, or hold it to take it out.
-- **Pinned Core Words:** The eight core words stay on screen above the photo grid, so they never scroll out of reach.
+- **Pinned Core Words:** All eight core words stay on screen above your own cards, so they never scroll out of reach. On a narrow screen they sit in two rows of four.
+- **British Voice:** The device voice speaks British English by default. You can choose an American voice, and a slower speed, in **Settings**.
+- **Stays Put:** Back does nothing, and the system bars stay hidden, so a stray swipe does not take the child out of the app. The screen stays on while the app is open.
 - **Sage Green Theme:** A calming, focus-oriented colour palette that sets this "big kid" app apart from the toddler version.
 
 *** 👩‍👦 Mom Mode (Admin)
-- **Safety Lock:** Access editing tools by **Long Pressing** the lock icon (top right).
+- **Safety Lock:** **Press and hold** the lock icon (top right) for 1.5 seconds. A ring fills while you hold. Then a gate names three digits in words. Tap them in that order.
+- **Locks Itself:** Tap the lock to leave admin mode. Admin mode also locks after two minutes without a touch, and when the app goes to the background. It does not lock while you edit a card, change the settings, or back up or import.
+- **Clear Marks:** The title says "Admin mode", and a red border marks each card that you can edit. A hidden card shows dimmed.
+- **Card Editor:** Tap one of your cards to open it. Change its picture or its word, hide it from your child, or delete it.
+- **Drag to Move:** Hold a card and drag it to a new place. The app saves the new order at once.
 - **Custom Photos:** Take a photo, or choose one you already have, to add your child's own toys, food, or people.
-- **Visibility Toggles:** "Hide" cards that are no longer relevant, without deleting them.
-- **Rename and Reorder:** Hold a card to rename it. Use the arrows to move it.
+- **Symbol Library:** 452 built-in symbols, searchable by name. When you add a card from a symbol, the symbol's name fills in the word.
+- **Hide, Don't Delete:** Switch off **Show to your child** to take a card off your child's grid and keep it.
 - **Guarded Deletes:** A delete asks first, and says that hiding is the reversible option.
-- **Auto-Relock:** Admin mode locks itself again after two minutes without a tap, so live delete buttons never sit in a child's hands.
-- **Backward Compatibility:** Seamlessly import backups from *Toddler Talk* so you don't have to retake all your photos.
+- **Settings:** A British or an American voice, a normal or a slow speed, and small, medium, or large cards. Each change applies at once.
+- **Backup and Import:** Save your cards and their photos to a dated zip file. Add the cards of a Talk Builder or a *Toddler Talk* backup.
+- **Safe Load Errors:** If the app cannot read the saved cards, it says so and offers **Try again**. The core words keep working, and nothing overwrites the saved cards.
 
 ** 🧭 Project Layout
 
 #+BEGIN_SRC text
 lib/
-  main.dart                    App entry, theme wiring, immersive mode
-  theme.dart                   Every colour token and the ThemeData
-  models/talk_card.dart        The card model, and its JSON compatibility
-  models/core_words.dart       The eight built-in words
-  data/card_repository.dart    Storage, photo files, backup and restore
-  services/speech_service.dart Text-to-speech, and the spoken-word highlight
-  screens/builder_screen.dart  The screen and its actions
-  widgets/                     Sentence strip, vocabulary grid, tiles, dialogs
+  main.dart                        App entry and theme wiring
+  theme.dart                       Every colour and metric token, the card sizes, and the ThemeData
+  models/talk_card.dart            The card model, and its JSON compatibility
+  models/core_words.dart           The eight built-in words
+  models/board_settings.dart       The voice, the speed, and the card size
+  data/card_repository.dart        Storage of cards and settings, photo files, backup and restore
+  services/speech_service.dart     Text-to-speech, and the spoken-word highlight
+  screens/builder_screen.dart      The screen, admin mode, and the auto-lock
+  widgets/parent_lock.dart         The lock that a parent holds
+  widgets/parent_gate.dart         The digits that a parent taps after the hold
+  widgets/card_editor_dialog.dart  The card editor
+  widgets/card_media.dart          The picture of a card: photo, symbol, or emoji
+  widgets/symbol_picker.dart       The symbol library
+  widgets/settings_sheet.dart      The Settings sheet
+  widgets/choices.dart             A titled row of choices, for the Settings sheet
+  widgets/                         Sentence strip, vocabulary grid, tiles, dialogs
+assets/symbols/                    The 452 bundled symbols
 #+END_SRC
 
 All colours live in ~lib/theme.dart~. Read them through ~AppTokens~ or
@@ -42,10 +59,13 @@ All colours live in ~lib/theme.dart~. Read them through ~AppTokens~ or
 ** 🛠 Tech Stack
 
 - **Framework:** Flutter (Dart)
+- **Widgets:** ~material_ui~ (Material Design, a package apart from the Flutter SDK)
 - **Speech:** ~flutter_tts~
-- **Camera:** ~image_picker~
+- **Camera and Gallery:** ~image_picker~
+- **Symbols:** ~flutter_svg~ (draws the bundled symbols)
+- **Drag to Move:** ~reorderable_grid_view~ (the card grid in admin mode)
 - **Storage:**
-  - ~shared_preferences~ (Card Data)
+  - ~shared_preferences~ (Card Data and Settings)
   - ~path_provider~ (Image Files)
 - **Data Management:**
   - ~archive~ (Zip compression/decompression) 
@@ -55,7 +75,7 @@ All colours live in ~lib/theme.dart~. Read them through ~AppTokens~ or
 ** 🚀 Getting Started
 
 *** Prerequisites
-- Flutter SDK (3.0+), or Docker (see Testing)
+- Flutter SDK (3.47+), or Docker (see Testing)
 - Android Device (Tablet recommended) or Emulator
 
 *** Installation
@@ -75,21 +95,49 @@ All colours live in ~lib/theme.dart~. Read them through ~AppTokens~ or
 *** How to Edit Cards
 1. Open the app.
 2. Find the **Lock Icon** in the top right corner.
-3. **Press and Hold** (Long Press) the lock until you see "Admin mode".
-4. You will now see:
-   - A "+" button to add new photos.
-   - "Delete" and "Hide" icons on custom cards.
-   - A "Settings" gear for Backup/Restore.
+3. **Press and hold** it for about 1.5 seconds. A ring fills as you hold. Release when the gate opens. With a screen reader, use the lock's long-press action instead.
+4. The **Grown-ups only** gate names three digits in words, for example "Tap seven, two, five". Tap those keys in that order. A wrong key, **Cancel**, a tap outside the gate, or 10 seconds with no key closes it. Hold the lock again to retry.
+5. You now see:
+   - A "+" button (**Add a card**). Take a photo, choose one from the gallery, or pick one from the **Symbol library**. Then type what the card says, up to 24 characters, and tap **Save**.
+   - A gear button (**Settings and backup**) for **Settings**, **Back up cards**, and **Import or restore cards**.
+   - A red border on each of your cards. Tap a card to open **Card details**. There you can change its picture or its word, switch off **Show to your child** to hide it, or tap **Delete card**.
+   - Hold a card and drag it to move it.
+6. Tap the lock when you finish. Admin mode also locks after two minutes without a touch.
+
+*** How to change the voice and the card size
+1. Enter admin mode.
+2. Tap the gear button (top right), then **Settings**.
+3. Choose the **Voice** (British or American), the **Speed** (Normal or Slow), and the **Card size** (Small, Medium, or Large). The app applies and saves each change at once. **Hear it** speaks "I want more." with the voice and the speed that you chose.
+
+The card size applies to your own cards. The core words keep their own layout.
+
+*** How to back up and restore
+1. Enter admin mode.
+2. Tap the gear button (top right).
+3. Choose:
+   - **Back up cards:** Makes a zip file of your cards and their photos, named ~talk_builder_backup_YYYY-MM-DD.zip~, and opens the share sheet. Save it to Google Drive, or send it to yourself.
+   - **Import or restore cards:** Select a Talk Builder or a *Toddler Talk* backup. Its cards join the cards that you have. The import skips a card that is already here, so a second import of the same file adds nothing.
+
+A backup from one device restores on another. The settings are not in the backup.
 
 *** How to Import from "Toddler Talk"
-1. In your old *Toddler Talk* app, go to Settings -> **Backup Data** and save the ~.zip~ file.
-2. Open *Talk Builder*.
-3. Enter **Admin Mode** (Long Press Lock).
-4. Tap the **Settings Gear** and select **Import from Toddler Talk**.
-5. Select the ~.zip~ file you created. Your photos will appear automatically!
+1. In *Toddler Talk*, enter parent mode: press and hold the lock, then tap the three digits that the gate names.
+2. Tap the three-dot menu (top right), then **Backup Data**. Save the ~.zip~ file where this device can reach it, for example in Google Drive.
+3. Open *Talk Builder*, and enter admin mode.
+4. Tap the gear button (top right), then **Import or restore cards**.
+5. Select the ~.zip~ file.
+
+Photo, GIF, symbol, and emoji cards arrive with their words, their colours, and whether they are hidden. Recordings, pages, settings, and the speech text of a card (**What it says (optional)** in *Toddler Talk*) do not arrive. Talk Builder speaks the word of each card with the device voice, and a message says how many recordings it left out.
+
+Talk Builder reads both *Toddler Talk* backup formats: the older one with ~data.json~, and the newer one with ~cards.json~.
+
+*** If the cards do not load
+If the app cannot read the saved cards, the grid says "The cards could not be loaded" and offers **Try again**. Try that first. The core words keep working. The **Add a card** button and the gear menu stay hidden, so nothing overwrites the saved cards.
+
+In admin mode, **Start again** also shows. It keeps a copy of the unreadable cards on the device, then starts with no cards of your own. The app cannot show the old cards again. Your child sees only **Try again**, so a child cannot clear the cards.
 
 *** ⚠️ Critical: Setting up "Kiosk Mode"
-To prevent your child from closing the app, you must enable **App Pinning** on your Android device:
+To prevent your child from closing the app, you must enable **App Pinning** on your Android device. Builder mode ignores Back and hides the system bars, but only App Pinning stops the Home gesture:
 1. Go to *Settings > Security > Advanced > App Pinning*.
 2. Turn it *ON*.
 3. Open Talk Builder.
@@ -97,9 +145,22 @@ To prevent your child from closing the app, you must enable **App Pinning** on y
 
 ** 🧪 Testing
 
-The test suite covers the sentence strip, the safety locks on destructive
-actions, the accessibility labels, and layout at four viewports and three text
-scales.
+The suite holds 158 tests. They share ~test/test_harness.dart~ for the plugin
+mocks, the viewport size, and the text scale.
+
+| File                        | Protects                                                                                                                 |
+|-----------------------------+--------------------------------------------------------------------------------------------------------------------------|
+| ~safety_test.dart~          | Deletes, hiding, the lock and the gate, the auto-lock, Back, the system bars, and a failed load                          |
+| ~speech_test.dart~          | The British voice, SPEAK and STOP, the word highlight and the strip that follows it, and a new sentence after SPEAK      |
+| ~layout_test.dart~          | Four viewports by three text scales, in child mode at each card size and in admin mode, and all eight core words in full |
+| ~card_editing_test.dart~    | The card editor, a new card from a photo or a symbol, the photo files, and drag to move                                  |
+| ~settings_test.dart~        | The voice, the speed, and the card size, and that they hold after a restart                                              |
+| ~card_repository_test.dart~ | A load that skips a bad record, Start again, backup, and import from Talk Builder and Toddler Talk                       |
+| ~symbol_test.dart~          | Symbol cards, the symbol library, and a symbol that does not load                                                        |
+| ~accessibility_test.dart~   | Screen-reader labels on the cards, the lock, and the words in the strip                                                  |
+| ~talk_card_test.dart~       | The JSON shape of a card, and records from older builds and from Toddler Talk                                            |
+| ~widget_test.dart~          | The first screen, the strip, the way into admin mode, and the pinned core words                                          |
+| ~bridge_test.dart~          | Widgets of ~package:flutter/material.dart~ get the app theme and localisations                                           |
 
 With a local Flutter SDK:
 #+BEGIN_SRC bash
@@ -114,15 +175,31 @@ tool/verify.sh format   # rewrite files with dart format
 tool/verify.sh shell    # a shell inside the container
 #+END_SRC
 
+CI pins its Flutter version in ~.github/workflows/main.yml~. Run the checks on
+that version before you push, so a local pass means a CI pass.
+
+When the image carries a different Flutter, clone that Flutter release on the
+host and set ~FLUTTER_SDK~ to it. The checkout replaces the image's own SDK.
+Keep it in a folder that Docker can mount, for example under your home folder.
+
+#+BEGIN_SRC bash
+git clone --branch <version> https://github.com/flutter/flutter.git <dir>
+FLUTTER_SDK=<dir> tool/verify.sh
+#+END_SRC
+
 CI runs ~dart format --set-exit-if-changed~, so run the format step before you
 commit.
 
 ** ♿ Accessibility Notes
 
 - Every card and every icon-only control carries a screen-reader label.
-- Touch targets meet the 48dp minimum, including the admin delete and hide
-  buttons.
+- In admin mode, a card tells a screen reader that a tap edits it, and whether
+  it is hidden from your child.
+- The lock needs a 1.5-second hold, which some people cannot make. A screen
+  reader offers the same unlock as the lock's long-press action.
+- Touch targets meet the 48dp minimum, including **Add a card**, **Delete card**,
+  and the **Show to your child** switch.
 - The layout holds at a system text scale of 2.0. Tile text scales with a
   ~FittedBox~ instead of overflowing.
 - Card deletes ask first. ~Clear~ offers ~Undo~.
-- Admin mode locks itself again after two minutes without a tap.
+- Admin mode locks itself again after two minutes without a touch.

@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../models/talk_card.dart';
 import '../theme.dart';
-import 'card_image.dart';
+import 'card_media.dart';
 
 /// One tile in the vocabulary grid.
 ///
@@ -17,33 +17,31 @@ class TalkCardTile extends StatelessWidget {
     required this.onTap,
     this.decodeWidth = 320,
     this.isAdminMode = false,
-    this.onDelete,
-    this.onToggleVisibility,
-    this.onRename,
-    this.onMoveLeft,
-    this.onMoveRight,
   });
 
   final TalkCard card;
   final VoidCallback onTap;
   final int decodeWidth;
+
+  /// True for a parent's card while a parent edits. A tap then opens the
+  /// editor, so the tile says so.
   final bool isAdminMode;
-  final VoidCallback? onDelete;
-  final VoidCallback? onToggleVisibility;
-  final VoidCallback? onRename;
-  final VoidCallback? onMoveLeft;
-  final VoidCallback? onMoveRight;
 
   bool get _isHidden => !card.isVisible;
+
+  bool get _isPhoto => card.imagePath != null;
 
   @override
   Widget build(BuildContext context) {
     final Widget tile = Semantics(
       button: true,
-      label: card.label,
-      hint: _isHidden ? 'Hidden from the grid' : null,
+      label: !isAdminMode
+          ? card.label
+          : (_isHidden
+                ? '${card.label}. Hidden from your child. Tap to edit.'
+                : '${card.label}. Tap to edit.'),
       child: Material(
-        color: card.isCustom ? AppTokens.surface : card.fillColor,
+        color: _isPhoto ? AppTokens.surface : card.fillColor,
         borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         elevation: 1,
         shadowColor: AppTokens.ink,
@@ -52,33 +50,38 @@ class TalkCardTile extends StatelessWidget {
             HapticFeedback.selectionClick();
             onTap();
           },
-          onLongPress: isAdminMode ? onRename : null,
           borderRadius: BorderRadius.circular(AppTokens.cardRadius),
           child: ExcludeSemantics(
-            child: card.isCustom
-                ? _buildPhoto(context)
-                : _buildCoreWord(context),
+            child: _isPhoto ? _buildPhoto(context) : _buildOnFill(context),
           ),
         ),
       ),
     );
 
     if (!isAdminMode) return tile;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned.fill(
-          child: Opacity(opacity: _isHidden ? 0.4 : 1, child: tile),
+    // In front, because a photo and its label plate cover a border drawn
+    // behind them.
+    return Opacity(
+      opacity: _isHidden ? 0.4 : 1,
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+          border: Border.all(
+            color: AppTokens.admin,
+            width: AppTokens.editableBorderWidth,
+          ),
         ),
-        ..._buildAdminControls(),
-      ],
+        child: tile,
+      ),
     );
   }
 
-  Widget _buildCoreWord(BuildContext context) {
-    // FittedBox, not a fixed font size: the emoji and the label have to shrink
-    // together when the tile is small or the system text scale is large. The
-    // label band is a share of the tile, so it can never outgrow its room.
+  /// A symbol or an emoji on the card fill, with the label in a band below.
+  Widget _buildOnFill(BuildContext context) {
+    // FittedBox, not a fixed font size: the picture and the label have to
+    // shrink together when the tile is small or the system text scale is large.
+    // The label band is a share of the tile, so it can never outgrow its room.
     return LayoutBuilder(
       builder: (context, constraints) {
         final double inset = (constraints.maxHeight * 0.06).clamp(0.0, 8.0);
@@ -90,13 +93,7 @@ class TalkCardTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: Text(
-                    card.icon ?? '',
-                    style: const TextStyle(fontSize: 40),
-                  ),
-                ),
+                child: CardMedia(card: card, decodeWidth: decodeWidth),
               ),
               SizedBox(
                 height: band,
@@ -120,8 +117,6 @@ class TalkCardTile extends StatelessWidget {
   }
 
   Widget _buildPhoto(BuildContext context) {
-    final String? path = card.imagePath;
-
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTokens.cardRadius),
@@ -136,9 +131,7 @@ class TalkCardTile extends StatelessWidget {
             return Column(
               children: [
                 Expanded(
-                  child: path == null
-                      ? const ColoredBox(color: AppTokens.well)
-                      : CardImage(path: path, decodeWidth: decodeWidth),
+                  child: CardMedia(card: card, decodeWidth: decodeWidth),
                 ),
                 // An opaque plate, not white-over-photo. With alpha, the
                 // label's contrast depended on whatever the photo was.
@@ -171,102 +164,6 @@ class TalkCardTile extends StatelessWidget {
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  /// Admin controls sized to the 48dp minimum.
-  ///
-  /// They were 24px circles sitting on the card's own tap area, so a mis-tap
-  /// deleted a photo the parent could not get back.
-  List<Widget> _buildAdminControls() {
-    return [
-      if (onToggleVisibility != null)
-        Positioned(
-          left: -4,
-          top: -4,
-          child: _AdminButton(
-            icon: card.isVisible ? Icons.visibility : Icons.visibility_off,
-            color: card.isVisible ? AppTokens.visible : AppTokens.hidden,
-            tooltip: card.isVisible
-                ? 'Hide "${card.label}"'
-                : 'Show "${card.label}"',
-            onPressed: onToggleVisibility!,
-          ),
-        ),
-      if (onDelete != null)
-        Positioned(
-          right: -4,
-          top: -4,
-          child: _AdminButton(
-            icon: Icons.delete_outline,
-            color: AppTokens.danger,
-            tooltip: 'Delete "${card.label}"',
-            onPressed: onDelete!,
-          ),
-        ),
-      if (onMoveLeft != null || onMoveRight != null)
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: -4,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _AdminButton(
-                icon: Icons.chevron_left,
-                color: AppTokens.hidden,
-                tooltip: 'Move "${card.label}" earlier',
-                onPressed: onMoveLeft,
-              ),
-              const SizedBox(width: 4),
-              _AdminButton(
-                icon: Icons.chevron_right,
-                color: AppTokens.hidden,
-                tooltip: 'Move "${card.label}" later',
-                onPressed: onMoveRight,
-              ),
-            ],
-          ),
-        ),
-    ];
-  }
-}
-
-class _AdminButton extends StatelessWidget {
-  const _AdminButton({
-    required this.icon,
-    required this.color,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String tooltip;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Semantics(
-        button: true,
-        label: tooltip,
-        child: SizedBox.square(
-          dimension: AppTokens.minTouchTarget,
-          child: Material(
-            color: onPressed == null ? AppTokens.outline : color,
-            shape: const CircleBorder(),
-            elevation: 2,
-            shadowColor: AppTokens.ink,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onPressed,
-              child: Icon(icon, size: 22, color: AppTokens.onSpeak),
-            ),
-          ),
         ),
       ),
     );

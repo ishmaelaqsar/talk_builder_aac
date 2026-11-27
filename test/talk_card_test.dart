@@ -21,6 +21,47 @@ void main() {
     expect(restored.isVisible, isFalse);
   });
 
+  test('a symbol card round-trips through JSON', () {
+    const TalkCard card = TalkCard(
+      id: 'sym',
+      label: 'Apple',
+      symbol: 'assets/symbols/apple.svg',
+      isCustom: true,
+    );
+
+    final TalkCard restored = TalkCard.fromJson(card.toJson());
+
+    expect(restored.symbol, 'assets/symbols/apple.svg');
+    expect(restored.imagePath, isNull);
+    expect(restored.isCustom, isTrue);
+  });
+
+  test('toJson leaves out a symbol that is null', () {
+    const TalkCard card = TalkCard(
+      id: 'x',
+      label: 'Ball',
+      imagePath: 'ball.jpg',
+      isCustom: true,
+    );
+
+    expect(card.toJson().containsKey('symbol'), isFalse);
+  });
+
+  test('copyWith keeps the symbol, and can change it', () {
+    const TalkCard card = TalkCard(
+      id: 'sym',
+      label: 'Apple',
+      symbol: 'assets/symbols/apple.svg',
+      isCustom: true,
+    );
+
+    expect(card.copyWith(label: 'Red apple').symbol, card.symbol);
+    expect(
+      card.copyWith(symbol: 'assets/symbols/banana.svg').symbol,
+      'assets/symbols/banana.svg',
+    );
+  });
+
   test('a Toddler Talk card with no isCustom flag is read as a photo card', () {
     // The old code read the absent 'color' key here and threw.
     final TalkCard card = TalkCard.fromJson({

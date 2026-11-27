@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/talk_card.dart';
 import '../theme.dart';
@@ -40,6 +40,17 @@ class SentenceStrip extends StatelessWidget {
   final void Function(int index) onTapWord;
   final void Function(int index) onRemoveWord;
 
+  static const double _wordPadding = 8;
+  static const double _wordGap = 8;
+
+  /// The scroll offset that puts word [index] in the middle of a strip
+  /// [viewport] wide. The caller clamps it to the scroll range.
+  static double centreOffset(int index, double viewport) =>
+      _wordPadding +
+      index * (MiniCard.width + _wordGap) +
+      MiniCard.width / 2 -
+      viewport / 2;
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -74,9 +85,8 @@ class SentenceStrip extends StatelessWidget {
       child: Text(
         'Tap words to build a sentence',
         textAlign: TextAlign.center,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: AppTokens.inkMuted),
+        style: Theme.of(context).textTheme.bodyMedium
+            ?.copyWith(color: AppTokens.inkMuted),
       ),
     ),
   );
@@ -84,9 +94,9 @@ class SentenceStrip extends StatelessWidget {
   Widget _buildWords() => ListView.separated(
     controller: scrollController,
     scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.all(8),
+    padding: const EdgeInsets.all(_wordPadding),
     itemCount: cards.length,
-    separatorBuilder: (context, index) => const SizedBox(width: 8),
+    separatorBuilder: (context, index) => const SizedBox(width: _wordGap),
     itemBuilder: (context, index) => MiniCard(
       card: cards[index],
       isSpeaking: speakingIndex == index,

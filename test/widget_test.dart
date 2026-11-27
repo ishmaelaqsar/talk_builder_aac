@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'test_harness.dart';
@@ -36,16 +36,16 @@ void main() {
     expect(find.text('Want'), findsOneWidget);
   });
 
-  testWidgets('Admin mode toggles on a long press', (tester) async {
+  testWidgets('Admin mode opens with the hold and the gate', (tester) async {
     await pumpApp(tester);
 
-    expect(find.byIcon(Icons.add_a_photo), findsNothing);
+    expect(find.byTooltip('Add a card'), findsNothing);
     expect(find.byIcon(Icons.lock_outline), findsOneWidget);
 
     await enterAdminMode(tester);
 
     expect(find.text('Admin mode'), findsOneWidget);
-    expect(find.byIcon(Icons.add_a_photo), findsOneWidget);
+    expect(find.byTooltip('Add a card'), findsOneWidget);
   });
 
   testWidgets('The core words stay pinned as the photo grid scrolls', (

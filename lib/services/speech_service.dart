@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../models/board_settings.dart';
+
 /// Speaks the child's words, and reports which word is being spoken.
 ///
 /// Two things the raw plugin does not give us:
@@ -11,11 +13,30 @@ import 'package:flutter_tts/flutter_tts.dart';
 ///    strip can highlight along. It is driven by the engine's own progress
 ///    callback, which reports character offsets into the text.
 class SpeechService extends ChangeNotifier {
-  SpeechService({FlutterTts? engine}) : _tts = engine ?? FlutterTts();
+  SpeechService({FlutterTts? engine}) : _tts = engine ?? FlutterTts() {
+    // No cancel handler. The Android plugin answers stop at once, and sends
+    // the cancel of the cut utterance after that. By then the next utterance
+    // has set its state, and the cancel would clear it. [stop] clears the
+    // state itself.
+    _tts.setCompletionHandler(_onComplete);
+    _tts.setErrorHandler((_) => _onDone());
+    _tts.setProgressHandler((text, start, end, word) {
+      _setSpeakingIndex(_indexForOffset(start));
+    });
+  }
+
+  /// Slow enough for a 2-to-5-year-old to follow, without sounding unnatural.
+  static const double normalRate = 0.45;
+
+  /// Slower than normal, for a child who is learning a word.
+  static const double slowRate = 0.35;
 
   final FlutterTts _tts;
 
-  bool _ready = false;
+  /// The last call to [apply]. Every utterance waits for it, so a fast first
+  /// tap does not speak at the engine's default rate and language.
+  Future<void>? _applied;
+
   bool _isSpeakingSentence = false;
   int? _speakingIndex;
 
@@ -32,22 +53,21 @@ class SpeechService extends ChangeNotifier {
   /// Index into the sentence being spoken, or null when idle or on a single word.
   int? get speakingIndex => _speakingIndex;
 
-  /// Configures the engine. Awaited before the first utterance, so a fast first
-  /// tap cannot slip through at the engine's default rate and language.
-  Future<void> init() async {
-    if (_ready) return;
-    await _tts.setLanguage('en-US');
-    // Slow enough for a 2-to-5-year-old to follow, without sounding unnatural.
-    await _tts.setSpeechRate(0.45);
+  /// Called when a whole sentence plays to its end. A cancel, a stop, and an
+  /// error do not call it.
+  void Function()? onSentenceCompleted;
 
-    _tts.setCompletionHandler(_onDone);
-    _tts.setCancelHandler(_onDone);
-    _tts.setErrorHandler((_) => _onDone());
-    _tts.setProgressHandler((text, start, end, word) {
-      _setSpeakingIndex(_indexForOffset(start));
-    });
+  /// Sets the voice and the speed.
+  Future<void> apply(BoardSettings settings) => _applied = _configure(settings);
 
-    _ready = true;
+  Future<void> _configure(BoardSettings settings) async {
+    // Logged, not thrown: a failed call here must not stop every later word.
+    try {
+      await _tts.setLanguage(settings.voice.language);
+      await _tts.setSpeechRate(settings.slow ? slowRate : normalRate);
+    } on Object catch (error) {
+      debugPrint('Speech settings failed: $error');
+    }
   }
 
   /// Speaks one word, with no highlight tracking.
@@ -77,7 +97,8 @@ class SpeechService extends ChangeNotifier {
     required bool isSentence,
   }) async {
     if (text.trim().isEmpty) return;
-    await init();
+    // The defaults stand in when the stored settings have not arrived yet.
+    await (_applied ?? apply(const BoardSettings()));
 
     // Cancel first. Otherwise fast taps overlap and nothing is intelligible.
     await _tts.stop();
@@ -108,6 +129,12 @@ class SpeechService extends ChangeNotifier {
     if (_speakingIndex == index) return;
     _speakingIndex = index;
     notifyListeners();
+  }
+
+  void _onComplete() {
+    final bool wasSentence = _isSpeakingSentence;
+    _onDone();
+    if (wasSentence) onSentenceCompleted?.call();
   }
 
   void _onDone() {

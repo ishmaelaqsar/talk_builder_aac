@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Colour and metric tokens for the whole app.
 ///
@@ -38,10 +38,6 @@ abstract final class AppTokens {
   /// The admin-mode indicator.
   static const Color admin = Color(0xFFB3261E);
 
-  /// The toggle that hides a card without deleting it.
-  static const Color hidden = Color(0xFF6B7280);
-  static const Color visible = Color(0xFF1F5FA8);
-
   /// Dims the screen while a backup or an import runs.
   static const Color scrim = Color(0x99000000);
 
@@ -51,18 +47,57 @@ abstract final class AppTokens {
   /// The border around a photo card.
   static const Color photoBorder = Color(0xFFB7CBA6);
 
+  /// The plate behind a symbol in the picker.
+  static const Color symbolPlate = well;
+
   /// Fallback fill for a core word whose stored colour is missing.
   static const int defaultCardColor = 0xFFE8EDE1;
 
   /// The minimum touch target, per the Material accessibility guideline.
   static const double minTouchTarget = 48.0;
 
-  /// The target width of one vocabulary tile. The grid fits as many as it can,
-  /// so a tile stays about the same size on a phone and on a tablet.
-  static const double tileExtent = 160.0;
+  /// The target width of one symbol in the picker. Smaller than a card,
+  /// because the picker is a parent-facing browse list.
+  static const double symbolExtent = 120.0;
+
+  /// The border that marks a card a parent can edit.
+  static const double editableBorderWidth = 3.0;
+
+  /// The lift of a card while a parent drags it.
+  static const double dragElevation = 3.0;
+
+  /// The height of a key on the parent gate. Its width is a third of the
+  /// dialog.
+  static const double gateKeySize = 64.0;
+
+  /// How long a parent holds the lock to reach the parent gate. Long enough
+  /// that a child's idle press does not open it.
+  static const Duration unlockHold = Duration(milliseconds: 1500);
+
+  /// The parent gate closes itself after this long with no key, so a child
+  /// who reaches it gets the screen back.
+  static const Duration gateTimeout = Duration(seconds: 10);
+
+  /// Admin mode drops back to the locked state after this long without a
+  /// touch, so a parent who walks away does not leave the card editor one tap
+  /// away from the child.
+  static const Duration adminTimeout = Duration(minutes: 2);
 
   static const double cardRadius = 16.0;
   static const double miniCardRadius = 8.0;
+}
+
+/// The target width of one card tile, which a parent chooses. The grid fits
+/// as many as it can, so a tile stays about the same size on a phone and on a
+/// tablet.
+enum CardSize {
+  small(120),
+  medium(160),
+  large(220);
+
+  const CardSize(this.extent);
+
+  final double extent;
 }
 
 abstract final class AppTheme {

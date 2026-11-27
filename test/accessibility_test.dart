@@ -21,7 +21,9 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('The lock explains that it needs a long press', (tester) async {
+  testWidgets('The lock explains that it needs a press and hold', (
+    tester,
+  ) async {
     installMocks();
     final SemanticsHandle handle = tester.ensureSemantics();
     await pumpApp(tester);
@@ -40,6 +42,23 @@ void main() {
     await pumpApp(tester);
 
     expect(find.bySemanticsLabel('Teddy'), findsOneWidget);
+
+    handle.dispose();
+  });
+
+  testWidgets('A symbol card announces its label as a button', (tester) async {
+    installMocks(
+      storedCards: [
+        storedCard(id: 's', label: 'Apple', symbol: 'assets/symbols/apple.svg'),
+      ],
+    );
+    final SemanticsHandle handle = tester.ensureSemantics();
+    await pumpApp(tester);
+
+    final SemanticsNode node = tester.getSemantics(
+      find.bySemanticsLabel('Apple'),
+    );
+    expect(node.flagsCollection.isButton, isTrue);
 
     handle.dispose();
   });

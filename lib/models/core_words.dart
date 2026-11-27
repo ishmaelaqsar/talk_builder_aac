@@ -3,8 +3,8 @@ import 'talk_card.dart';
 
 /// The built-in words, always present and never editable.
 ///
-/// These stay pinned above the photo grid, so they cannot scroll out of a
-/// child's reach as the photo library grows.
+/// These stay pinned above the parent's cards, so they cannot scroll out of a
+/// child's reach as the parent adds cards.
 const List<TalkCard> coreWords = [
   TalkCard(id: 'c_i', label: 'I', icon: '🙂', color: CardPalette.subject),
   TalkCard(id: 'c_want', label: 'Want', icon: '🤲', color: CardPalette.action),

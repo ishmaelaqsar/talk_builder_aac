@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/talk_card.dart';
 import '../theme.dart';
-import 'card_image.dart';
+import 'card_media.dart';
 
 /// One word inside the sentence strip.
 ///
@@ -16,6 +16,9 @@ class MiniCard extends StatelessWidget {
     required this.onTap,
     required this.onRemove,
   });
+
+  /// Fixed, so the strip can compute where each word sits.
+  static const double width = 88;
 
   final TalkCard card;
   final bool isSpeaking;
@@ -32,7 +35,7 @@ class MiniCard extends StatelessWidget {
       label: '${card.label}. In the sentence.',
       hint: 'Double tap to hear it. Long press to remove it.',
       child: Material(
-        color: card.isCustom ? AppTokens.surface : card.fillColor,
+        color: card.imagePath != null ? AppTokens.surface : card.fillColor,
         borderRadius: BorderRadius.circular(AppTokens.miniCardRadius),
         child: InkWell(
           onTap: onTap,
@@ -46,7 +49,7 @@ class MiniCard extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return Container(
-      width: 88,
+      width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTokens.miniCardRadius),
         border: Border.all(
@@ -65,17 +68,7 @@ class MiniCard extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(AppTokens.miniCardRadius),
                   ),
-                  child: card.isCustom && card.imagePath != null
-                      ? CardImage(path: card.imagePath!, decodeWidth: 176)
-                      : Center(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              card.icon ?? '',
-                              style: const TextStyle(fontSize: 30),
-                            ),
-                          ),
-                        ),
+                  child: CardMedia(card: card, decodeWidth: 176),
                 ),
               ),
               SizedBox(
