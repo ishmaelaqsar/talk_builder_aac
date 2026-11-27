@@ -17,6 +17,14 @@ on:
 permissions:
   contents: write
 
+# Pinned, because a floating channel lets a new Flutter release fail the checks
+# with no change to the code. Raise it on purpose.
+env:
+  FLUTTER_VERSION: '3.50.1'
+  # The lint step of the Android Gradle plugin 9 calls an API that Java 21
+  # added. On Java 17 the release build fails in lintVitalAnalyzeRelease.
+  JAVA_VERSION: '21'
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -26,11 +34,12 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
 
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Install Dependencies
         run: flutter pub get
@@ -44,6 +53,11 @@ jobs:
       - name: Run Tests
         run: flutter test
 
+      # The release job runs only by hand. Without this step, a broken Android
+      # build shows first at release time.
+      - name: Build APK (not published)
+        run: flutter build apk --release
+
   build-release:
     needs: validate
     if: github.event_name == 'workflow_dispatch'
@@ -54,11 +68,12 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
 
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Install Dependencies
         run: flutter pub get
